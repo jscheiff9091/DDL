@@ -1,0 +1,8 @@
+*.zip
+BSP/
+CMSIS/
+emlib/
+*GNU*
+hal-config/
+outgoing/
+.metadata/
