@@ -6,3 +6,5 @@ emlib/
 hal-config/
 outgoing/
 .metadata/
+.DS_Store
+*/.DS_Store
