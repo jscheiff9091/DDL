@@ -7,36 +7,60 @@
 
 #include "si7021.h"
 
-/* The BEFORE, ACK, NACK, STOP, START, and BLOCK commands give instructions on how the next interrupt should handle the SDA line when
- * 		the interrupt after the sensor responds to the data byte being sent. BEFORE tells whether data is sent before or after the commands,
- * 		BLOCK delays commands being sent until the next in the interrupt, the rest send the command their name suggests. The commands for a
- * 		certain operation are queued in its assigned function, as seen in the functions below. The queue consists of 16 bit unsigned integers,
- * 		the MsB are the encoded commands described above, and the LsB is the data byte to be sent. These are masked and separated when read
- * 		from the queue in the interrupt handler.
- */
+extern volatile I2C_CMDPacket_t I2C_CMD_Read;
+extern volatile I2C_CMDPacket_t I2C_CMD_Write;
 
-
-void write_UserRegister1(){
-	clear_queue(&t_queue);
-	enqueue(&t_queue,((BEFORE | ACK |STOP) << 8) | 0xE6);						//Data: Write USER REGISTER 1 command
-	enqueue(&t_queue, 0x0001);													//Data: Set user register to 12 bit temp resolution
-
-	response = BEFORE;
-	counter = 0;
-	I2C0->CMD |= I2C_CMD_CLEARTX;												//Clear TX Buffer and shift register
-	I2C0->TXDATA = SI7021_WRITE;												//Write to SI7021 Temp Sensor
-	I2C0->CMD |= I2C_CMD_START;													//Start Transmission
-	for(int i = 0; i < 1000; i++);												//Give time for I2C state to be set
+void i2c_send_read_command(uint8_t cmd_code, uint8_t only_big_data)
+{
+	I2C_CMD_Read.command = cmd_code;									//Set command for operation to be performed by SI7021
+	I2C_CMD_Read.write_data = only_big_data;							//Set data to be written to SI7021 if any
+	I2C_CMD_Read.I2C_state = ADDR_WRITE_SENT;							//Set state machine
+	I2C0->CMD |= I2C_CMD_CLEARTX;										//Clear tx if any pending bytes need to be sent
+	I2C0->TXDATA = SI7021_WRITE;										// Send slave address + write
+	I2C0->CMD |= I2C_CMD_START;											//Send start bit
+	for(int i = 0; i < 1000; i++);
 }
 
-void read_UserRegister1(){
-	clear_queue(&t_queue);
-	enqueue(&t_queue, ((START) << 8) | 0xE7);									//Data: Read User Register 1 command
-	enqueue(&t_queue, ((BEFORE | NACK | STOP | BLOCK) << 8) | 0x81);			//Data: Read from SI7021 temp sensor
+void i2c_send_write_command(uint8_t cmd_code, uint8_t only_big_data)
+{
+	I2C_CMD_Write.command = cmd_code;									//set command code to send to Si7021
+	I2C_CMD_Write.write_data = only_big_data;							//set data to write if any
+	I2C_CMD_Write.I2C_state = ADDR_WRITE_SENT;							//Set state machine
+	I2C0->CMD |= I2C_CMD_CLEARTX;										//Clear any TX buffer bytes waiting
+	I2C0->TXDATA = SI7021_WRITE;										//Send Slave address + write
+	I2C0->CMD |= I2C_CMD_START;											// Send start bit
+	for(int i = 0; i < 1000; i++);
+}
 
-	response = BEFORE;
-	counter = 0;
-	I2C0->CMD |= I2C_CMD_CLEARTX;
-	I2C0->TXDATA = SI7021_WRITE;
-	I2C0->CMD |= I2C_CMD_START;
+uint8_t get_temp(uint16_t sensor_return_val)
+{
+	uint8_t rv;
+	rv = ((SI_MULTIPLY * sensor_return_val) / SI_DIVIDE) - SI_SUBTRACT;					//Equation given by SI7021 data sheet
+	return rv;
+}
+
+void get_I2C_ready_for_transmission_of_death_star_plans()
+{
+	blockSleepState(EM2);
+	if(I2C0->STATE & I2C_STATE_BUSY)
+	{
+		I2C0->CMD |= I2C_CMD_ABORT;
+	}
+	GPIO_PinModeSet(I2C_SDA_PORT, I2C_SDA_PIN, gpioModeWiredAnd, I2C_SDA_ON);			//SDA: Open drain out w/ Pullup resistor, set high initially
+	GPIO_PinModeSet(I2C_SCL_PORT, I2C_SCL_PIN, gpioModeWiredAnd, I2C_SCL_ON);			//SCL: Open drain out w/ Pullup resistor, set high initially
+
+	for (uint8_t i = 0; i < 9; i++) {
+		GPIO_PinOutClear(I2C_SCL_PORT, I2C_SCL_PIN);
+		GPIO_PinOutSet(I2C_SCL_PORT, I2C_SCL_PIN);
+	}
+
+}
+
+void death_star_plans_transmitted()
+{
+
+	GPIO_PinModeSet(I2C_SCL_PORT, I2C_SCL_PIN, gpioModeDisabled, I2C_SCL_OFF);			//Disable SCL pin
+	GPIO_PinModeSet(I2C_SDA_PORT, I2C_SDA_PIN, gpioModeDisabled, I2C_SDA_OFF);			//Disable SDA pin
+	GPIO_PinOutClear(SENS_ENABLE_PORT, SENS_ENABLE_PIN);								//Clear sens enable
+	unblockSleepState(EM2);																//unblock sleep mode 2
 }

@@ -4,7 +4,6 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
 //***********************************************************************************
 // defined files
 //***********************************************************************************
@@ -16,10 +15,7 @@
 // global variables
 //***********************************************************************************
 extern volatile uint8_t sleep_block_counter[];
-extern volatile uint8_t response;
-extern volatile struct Transmit_Queue t_queue;
-extern volatile uint8_t counter;
-extern volatile struct Transmit_Queue r_queue;
+extern volatile uint16_t sensor_reading;
 
 //***********************************************************************************
 // function prototypes

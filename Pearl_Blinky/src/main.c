@@ -32,10 +32,11 @@
 #include "queue.h"
 
 volatile uint8_t sleep_block_counter[] = {0,0,0,0,0};
-volatile uint8_t response;
-volatile struct Transmit_Queue t_queue;
-volatile uint8_t counter;
-volatile struct Transmit_Queue r_queue;
+volatile I2C_CMDPacket_t I2C_CMD_Read;
+volatile I2C_CMDPacket_t I2C_CMD_Write;
+volatile uint16_t sensor_reading;
+
+
 
 int main(void)
 {
@@ -56,15 +57,22 @@ int main(void)
   CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO);
   CMU_OscillatorEnable(cmuOsc_HFRCO, false, false);
 
-  /* Initialize Globals */
-  initialize_queue(&t_queue);
-  initialize_queue(&r_queue);
-
   /* Initialize clocks */
   cmu_init();
 
   /* Initialize GPIO */
   gpio_init();
+
+#ifdef I2C
+
+  for(int i = 0; i < 10; i++)
+  {
+	  GPIO_PinOutClear(I2C_SCL_PORT, I2C_SCL_PIN);
+	  GPIO_PinOutSet(I2C_SCL_PORT, I2C_SCL_PIN);
+  }
+
+  I2C_init();
+#endif
 
   /* Initialize Timer */
 #ifdef ULFRCO
@@ -73,18 +81,6 @@ int main(void)
 #ifdef LFXO
   letimer0_init();
 #endif
-
-  /* Initialize I2C */
-  for(int i = 0; i < 1000000; i++);				//Give Sensor time to initialize
-
-  I2C_init();
-
-
-  for(int i = 0; i < 10; i++)
-  {
-	  GPIO_PinOutClear(I2C_SCL_PORT, I2C_SCL_PIN);
-	  GPIO_PinOutSet(I2C_SCL_PORT, I2C_SCL_PIN);
-  }
 
   /* Infinite blink loop */
   while (1) {
