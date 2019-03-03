@@ -4,18 +4,21 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 //***********************************************************************************
 // defined files
 //***********************************************************************************
 #define LFXO
-#define I2C
+//#define I2C
+//#define LETIMER
+#define LEUART
 
 
 //***********************************************************************************
 // global variables
 //***********************************************************************************
 extern volatile uint8_t sleep_block_counter[];
-extern volatile uint16_t sensor_reading;
+//extern volatile uint16_t sensor_reading;
 
 //***********************************************************************************
 // function prototypes

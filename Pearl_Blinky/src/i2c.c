@@ -53,8 +53,6 @@ void I2C_init(){
  */
 void I2C0_IRQHandler(void){
 	uint32_t interrupt = I2C0->IF;
-	if (I2C_CMD_Read.I2C_state == IDLE && sensor_reading != 0)
-		return; //bitch
 	if(interrupt & I2C_IF_NACK)															//Handle NACK interrupts
 	{
 		I2C0->CMD |= I2C_CMD_ABORT;														//ABORT I2C bus
@@ -106,6 +104,7 @@ void I2C0_IRQHandler(void){
 		}
 	else if(interrupt & I2C_IF_RXDATAV)													//Handle RXDATA interrupts
 	{
+		uint16_t sensor_reading;
 		if(I2C_CMD_Read.I2C_state == ADDR_READ_SENT)									//Start bit + address + read sent
 		{
 			if((I2C_CMD_Read.command & CMD_MASK) == SI_READ_USER_REG)					//expecting single byte for Read User Register

@@ -32,6 +32,13 @@
 #define SENS_ENABLE_ON		true
 #define SENS_ENABLE_OFF		false
 
+#define LEUART_RX_PORT		gpioPortD
+#define LEUART_RX_PIN		11
+#define LEUART_RX_DEFAULT	false
+#define LEUART_TX_PORT		gpioPortD
+#define	LEUART_TX_PIN		10
+#define LEUART_TX_DEFAULT	true
+
 
 //***********************************************************************************
 // global variables

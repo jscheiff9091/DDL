@@ -40,6 +40,14 @@ void gpio_init(void){
 	GPIO_DriveStrengthSet(SENS_ENABLE_PORT, gpioDriveStrengthWeakAlternateWeak); 				//SENS: drive strength weak
 	GPIO_PinModeSet(SENS_ENABLE_PORT, SENS_ENABLE_PIN, gpioModePushPull, SENS_ENABLE_OFF);		//SENS: Enable, Push-Pull Out Mode, set high
 #endif
+
+#ifdef LEUART
+	GPIO_DriveStrengthSet(LEUART_TX_PORT, gpioDriveStrengthWeakAlternateWeak); 					//SENS: drive strength weak
+
+	GPIO_PinModeSet(LEUART_RX_PORT, LEUART_RX_PIN, gpioModeInput, LEUART_RX_DEFAULT);
+	GPIO_PinModeSet(LEUART_TX_PORT, LEUART_TX_PIN, gpioModePushPull, LEUART_TX_DEFAULT);
+
+#endif
 	for(int i = 0; i < 100000; i++);
 
 }

@@ -17,7 +17,7 @@
 /*defines*/
 
 /* User must set these 3 fields */
-#define LED_PERIOD			4
+#define LED_PERIOD			5
 #define	LED_ON_TIME			.0183
 
 //LFXO/ULFRCO defined in main.h

@@ -15,8 +15,6 @@
  *
  ******************************************************************************/
 
-#include <stdint.h>
-#include <stdbool.h>
 #include "em_device.h"
 #include "em_chip.h"
 #include "em_cmu.h"
@@ -30,11 +28,14 @@
 #include "i2c.h"
 #include "si7021.h"
 #include "queue.h"
+#include "leuart.h"
 
 volatile uint8_t sleep_block_counter[] = {0,0,0,0,0};
 volatile I2C_CMDPacket_t I2C_CMD_Read;
 volatile I2C_CMDPacket_t I2C_CMD_Write;
-volatile uint16_t sensor_reading;
+volatile Transmit_UART_State_t TX_state;
+volatile Receive_Buffer_t receive_buff;
+//volatile uint16_t sensor_reading;
 
 
 
@@ -75,11 +76,15 @@ int main(void)
 #endif
 
   /* Initialize Timer */
-#ifdef ULFRCO
+#if defined(ULFRCO) && defined(LFXO)
   letimer0_init();
 #endif
-#ifdef LFXO
+#if defined(LFXO) && defined(LETIMER)
   letimer0_init();
+#endif
+
+#ifdef LEUART
+  leuart_init();
 #endif
 
   /* Infinite blink loop */
